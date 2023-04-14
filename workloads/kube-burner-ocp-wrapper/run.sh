@@ -6,7 +6,7 @@ ES_SERVER=${ES_SERVER:-https://search-perfscale-dev-chmf5l4sh66lvxbnadi4bznl3a.u
 LOG_LEVEL=${LOG_LEVEL:-info}
 KUBE_BURNER_VERSION=${KUBE_BURNER_VERSION:-1.5}
 CHURN=${CHURN:-true}
-WORKLOAD=${WORKLOAD:?}
+WORKLOAD=${WORKLOAD:-cluster-density}
 QPS=${QPS:-20}
 BURST=${BURST:-20}
 GC=${GC:-true}
@@ -56,7 +56,7 @@ EOF
 download_binary
 cmd="/tmp/kube-burner ocp ${WORKLOAD} --log-level=${LOG_LEVEL} --qps=${QPS} --burst=${BURST} --gc=${GC}"
 if [[ ${WORKLOAD} =~ "cluster-density" ]]; then
-  ITERATIONS=${ITERATIONS:?}
+  ITERATIONS=${ITERATIONS:-500}
   cmd+=" --iterations=${ITERATIONS} --churn=${CHURN}"
 fi
 if [[ -n ${MC_KUBECONFIG} ]]; then
