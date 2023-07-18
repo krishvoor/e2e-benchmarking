@@ -15,9 +15,20 @@ log "###############################################"
 log "Workload: ${WORKLOAD}"
 log "###############################################"
 
-timeout $TEST_TIMEOUT ./k8s-netperf --debug --metrics --all --config ${WORKLOAD} --search $ES_SERVER --tcp-tolerance ${TOLERANCE} --clean=true
-run=$?
-
+echo $WORKLOAD
+        if [ $WORKLOAD == iperf ];then
+          timeout $TEST_TIMEOUT ./k8s-netperf --debug --metrics --all --iperf --search $ES_SERVER --tcp-tolerance ${TOLERANCE} --clean=true
+          run=$?
+        elif [ $WORKLOAD == local ]; then
+          timeout $TEST_TIMEOUT ./k8s-netperf --debug --metrics --all --local --search $ES_SERVER --tcp-tolerance ${TOLERANCE} --clean=true
+          run=$?
+        elif [ $WORKLOAD == across ]; then
+          timeout $TEST_TIMEOUT ./k8s-netperf --debug --metrics --all --across --search $ES_SERVER --tcp-tolerance ${TOLERANCE} --clean=true
+          run=$?
+        else
+          timeout $TEST_TIMEOUT ./k8s-netperf --debug --metrics --all --config ${WORKLOAD} --search $ES_SERVER --tcp-tolerance ${TOLERANCE} --clean=true
+          run=$?
+        fi
 # Add debugging info (will be captured in each execution output)
 echo "============ Debug Info ============"
 echo k8s-netperf version $NETPERF_VERSION
