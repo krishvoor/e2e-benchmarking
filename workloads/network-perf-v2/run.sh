@@ -49,5 +49,3 @@ main() {
 
   return $?
 }
-
-main
