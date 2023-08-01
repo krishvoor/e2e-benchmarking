@@ -18,7 +18,7 @@ create_resources() {
 
 # Function for cleanup actions
 cleanup() {
-  rm -rf "$NETPERF_DIR" "$NETPERF_TAR"
+  rm -rf k8s-netperf README.md LICENSE
 }
 
 main() {
