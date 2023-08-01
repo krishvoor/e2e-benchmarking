@@ -10,7 +10,7 @@ export NETPERF_URL=${NETPERF_URL:-https://github.com/cloud-bulldozer/k8s-netperf
 # Workload
 export WORKLOAD=${WORKLOAD:-smoke.yaml}
 export TEST_TIMEOUT=${TEST_TIMEOUT:-7200}
-
+export OPTIONS=${OPTIONS:-}
 # Tolerance of delta from hostNetwork to podNetwork - single stream
 # Setting high watermark to only alert us if something has really gone
 # sideways. We will be actively montiroing the results. Eventually
