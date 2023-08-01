@@ -31,15 +31,16 @@ main() {
   log "Workload: $WORKLOAD"
   log "###############################################"
 
-  if [[ $OPTIONS == "iperf" || $OPTIONS == "local" || $OPTIONS == "across" ]]; then
-    timeout "$TEST_TIMEOUT" "./$NETPERF_DIR" --debug --metrics --all "$OPTIONS" --search "$ES_SERVER" --tcp-tolerance "$TOLERANCE" --clean=true
+  if [[ ${FLAG} == "iperf" || ${FLAG} == "local" || ${FLAG} == "across" ]]; then
+    timeout ${TEST_TIMEOUT} ./k8s-netperf --debug --uuid ${UUID} --metrics --all ${FLAG} --search ${ES_SERVER} --tcp-tolerance ${TOLERANCE} --clean=true
   elif; then
-    timeout $TEST_TIMEOUT ./k8s-netperf --debug --metrics --all --config ${WORKLOAD} --search $ES_SERVER --tcp-tolerance ${TOLERANCE} --clean=true
+    timeout ${TEST_TIMEOUT} ./k8s-netperf --debug --uuid ${UUID} --metrics --all --config ${WORKLOAD} --search ${ES_SERVER} --tcp-tolerance ${TOLERANCE} --clean=true
   if
 
   # Add debugging info (will be captured in each execution output)
   echo "============ Debug Info ============"
-  echo "k8s-netperf version" $NETPERF_VERSION
+  echo "k8s-netperf version" ${NETPERF_VERSION}
+  echo "UUID is" ${UUID}
   oc get pods -n netperf -o wide
   oc get nodes -o wide
   oc get machineset -A
