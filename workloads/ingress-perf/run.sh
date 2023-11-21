@@ -3,11 +3,11 @@
 set -e
 
 UUID=${UUID:-$(uuidgen)}
-ES_SERVER=${ES_SERVER:-https://search-perfscale-dev-chmf5l4sh66lvxbnadi4bznl3a.us-west-2.es.amazonaws.com}
+ES_SERVER=${ES_SERVER=https://search-perfscale-dev-chmf5l4sh66lvxbnadi4bznl3a.us-west-2.es.amazonaws.com}
 ES_INDEX=${ES_INDEX:-ingress-performance}
 WORKLOAD=${WORKLOAD:-ingress-perf}
 LOG_LEVEL=${LOG_LEVEL:-info}
-VERSION=${VERSION:-0.3.2}
+VERSION=${VERSION:-0.3.5}
 CONFIG=${CONFIG:?}
 BASELINE_UUID=${BASELINE_UUID:-}
 BASELINE_INDEX=${BASELINE_INDEX:-ingress-performance-baseline}
@@ -32,6 +32,7 @@ fi
 # Do not exit if ingress-perf fails, we need to capture the exit code.
 set +e
 
+echo $cmd
 JOB_START=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 $cmd
 exit_code=$?
