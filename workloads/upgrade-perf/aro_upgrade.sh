@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
+set -x
 
 export aro_version_channel=${ARO_VERSION_CHANNEL:=candidate}
+export ES_SERVER=${ES_SERVER:=}
+export ARO_RESOURCE_GROUP=${ARO_RESOURCE_GROUP:=krishvoor-aro-rg}
 _es_index=${ES_INDEX:=managedservices-timings}
 export control_plane_waiting_iterations=${ARO_CONTROL_PLANE_WAITING:=90}
 export waiting_per_worker=${ARO_WORKER_UPGRADE_TIME:=5}
-ARO_CLUSTER_NAME=`oc get infrastructure.config.openshift.io cluster -o json 2>/dev/null | jq -r .status.infrastructureName`
+ARO_CLUSTER_NAME=$(oc get infrastructure.config.openshift.io cluster -o json 2>/dev/null | jq -r '.status.infrastructureName | sub("-[^-]+$"; "")')
 export VERSION="4.13.22"
 UUID=${UUID:-$(uuidgen)}
 
@@ -17,17 +20,16 @@ aro_upgrade(){
   echo "OCP Channel Group: ${aro_version_channel}"
   az account show
 
-  if [ $(az aro list -g ${ARO_RESOURCE_GROUP} -o json | jq -r '.[].name' | grep ${ARO_CLUSTER_NAME}) != ${ARO_CLUSTER_NAME} ] ; then
+  if ! az aro list -g ${ARO_RESOURCE_GROUP} -o json | jq -r '.[].name' | grep -q "${ARO_CLUSTER_NAME}" ; then
     echo "ERROR: Cluster ${ARO_CLUSTER_NAME} not found on az aro list results. Exiting..."
     exit 1
   fi
 
-  fi
-  if [ ! -z ${VERSION} ] ; then
+  if [ -z ${VERSION} ] ; then
     echo "ERROR: No version to upgrade is given for the cluster ${ARO_CLUSTER_NAME}"
     exit 1
   else
-    echo "INFO: Upgrading cluster to ${VERSION} version..."
+    echo "INFO: Upgrading cluster ${ARO_CLUSTER_NAME} to ${VERSION} version..."
   fi
 
   echo "INFO: Patching the 4.13 Admin Acks"
@@ -110,34 +112,33 @@ aro_cp_upgrade_active_waiting() {
 }
 
 aro_upgrade_index_results() {
-    METADATA=$(
-        grep -v "^#" <<EOF
-    {
-    "uuid" : "${UUID}",
-    "platform": "ARO",
-    "cluster_name": "${ARO_CLUSTER_NAME}",
-    "network_type": "$(oc get network cluster -o json 2>/dev/null | jq -r .status.networkType)",
-    "controlplane_upgrade_duration": "$1",
-    "workers_upgrade_duration": "$3",
-    "from_version": "$5",
-    "to_version": "$6",
-    "controlplane_upgrade_result": "$2",
-    "workers_upgrade_result": "$4",
-    "master_count": "$(oc get node -l node-role.kubernetes.io/master= --no-headers 2>/dev/null | wc -l)",
-    "worker_count": "$(oc get node --no-headers -l node-role.kubernetes.io/workload!="",node-role.kubernetes.io/infra!="",node-role.kubernetes.io/worker="" 2>/dev/null | wc -l)",
-    "infra_count": "$(oc get node -l node-role.kubernetes.io/infra= --no-headers --ignore-not-found 2>/dev/null | wc -l)",
-    "workload_count": "$(oc get node -l node-role.kubernetes.io/workload= --no-headers --ignore-not-found 2>/dev/null | wc -l)",
-    "total_node_count": "$(oc get nodes 2>/dev/null | wc -l)",
-    "ocp_cluster_name": "$(oc get infrastructure.config.openshift.io cluster -o json 2>/dev/null | jq -r .status.infrastructureName)",
-    "timestamp": "$(date +%s%3N)",
-    "cluster_version": "$5",
-    "cluster_major_version": "$(echo $5 | awk -F. '{print $1"."$2}')"
-    }
-    EOF
-        )
-        printf "Indexing installation timings to ${ES_SERVER}/${_es_index}"
-        curl -k -sS -X POST -H "Content-type: application/json" ${ES_SERVER}/${_es_index}/_doc -d "${METADATA}" -o /dev/null
-        return 0
+    METADATA=$(grep -v "^#" <<EOF
+{
+  "uuid": "${UUID}",
+  "platform": "ARO",
+  "cluster_name": "${ARO_CLUSTER_NAME}",
+  "network_type": "$(oc get network cluster -o json 2>/dev/null | jq -r .status.networkType)",
+  "controlplane_upgrade_duration": "$1",
+  "workers_upgrade_duration": "$3",
+  "from_version": "$5",
+  "to_version": "$6",
+  "controlplane_upgrade_result": "$2",
+  "workers_upgrade_result": "$4",
+  "master_count": "$(oc get node -l node-role.kubernetes.io/master= --no-headers 2>/dev/null | wc -l)",
+  "worker_count": "$(oc get node --no-headers -l node-role.kubernetes.io/workload!="",node-role.kubernetes.io/infra!="",node-role.kubernetes.io/worker="" 2>/dev/null | wc -l)",
+  "infra_count": "$(oc get node -l node-role.kubernetes.io/infra= --no-headers --ignore-not-found 2>/dev/null | wc -l)",
+  "workload_count": "$(oc get node -l node-role.kubernetes.io/workload= --no-headers --ignore-not-found 2>/dev/null | wc -l)",
+  "total_node_count": "$(oc get nodes 2>/dev/null | wc -l)",
+  "ocp_cluster_name": "$(oc get infrastructure.config.openshift.io cluster -o json 2>/dev/null | jq -r .status.infrastructureName)",
+  "timestamp": "$(date +%s%3N)",
+  "cluster_version": "$5",
+  "cluster_major_version": "$(echo $5 | awk -F. '{print $1"."$2}')"
+}
+EOF
+)
+    printf "Indexing installation timings to ${ES_SERVER}/${_es_index}"
+    curl -k -sS -X POST -H "Content-type: application/json" ${ES_SERVER}/${_es_index}/_doc -d "${METADATA}" -o /dev/null
+    return 0
 }
 
 aro_upgrade
