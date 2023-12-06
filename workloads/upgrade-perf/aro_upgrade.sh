@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-set -x
+set -ex
 
 export aro_version_channel=${ARO_VERSION_CHANNEL:=candidate}
 export ES_SERVER=${ES_SERVER:=}
 export ARO_RESOURCE_GROUP=${ARO_RESOURCE_GROUP:=krishvoor-aro-rg}
-_es_index=${ES_INDEX:=managedservices-timings}
+export _es_index=${ES_INDEX:=managedservices-timings}
 export control_plane_waiting_iterations=${ARO_CONTROL_PLANE_WAITING:=90}
 export waiting_per_worker=${ARO_WORKER_UPGRADE_TIME:=5}
-ARO_CLUSTER_NAME=$(oc get infrastructure.config.openshift.io cluster -o json 2>/dev/null | jq -r '.status.infrastructureName | sub("-[^-]+$"; "")')
+export ARO_CLUSTER_NAME=$(oc get infrastructure.config.openshift.io cluster -o json 2>/dev/null | jq -r '.status.infrastructureName | sub("-[^-]+$"; "")')
 export VERSION="4.13.22"
-UUID=${UUID:-$(uuidgen)}
+export UUID="${UUID:-$(uuidgen)}"
 
 aro_upgrade(){
   if [ ${aro_version_channel} == "nightly" ] ; then
