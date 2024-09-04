@@ -1,0 +1,30 @@
+[
+    {
+        "version": "v2.0",
+        "experiment_name": "kube-controller-manager-hc",
+        "cluster_name": "default",
+        "performance_profile": "resource-optimization-openshift",
+        "mode": "monitor",
+        "target_cluster": "local",
+        "datasource": "prometheus-1",
+        "kubernetes_objects": [
+            {
+                "type": "deployment",
+                "name": "kube-controller-manager",
+                "namespace": "clusters-kris-h1x-0001",
+                "containers":[
+                    {
+                        "container_name": "kube-controller-manager",
+                        "container_image_name": "quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:75b8073fad4a6119f00538d51f95c968d131c6b703ea556395bf851c2ac36d43"
+                    }
+                ]
+            }
+        ],
+        "trial_settings": {
+            "measurement_duration": "15min"
+        },
+        "recommendation_settings": {
+            "threshold": "0.1"
+        }
+    }
+]
